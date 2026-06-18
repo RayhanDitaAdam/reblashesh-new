@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd face-mesh && npm install && npm run build",
+  "outputDirectory": "face-mesh/dist"
+}
