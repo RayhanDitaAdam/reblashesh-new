@@ -1,0 +1,22 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production
+dist/
+**/dist/
+dist-ssr/
+
+# Large Model Tasks
+*.task
+**/face_landmarker.task
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
