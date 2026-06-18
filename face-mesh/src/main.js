@@ -190,8 +190,43 @@ async function main() {
       }
       
       const faceHeight = maxY - minY;
+      const faceWidth = maxX - minX;
       const padding = 15;
       
+      // 1. Draw Target Brackets framing the face
+      ctx.strokeStyle = "#00ffaa";
+      ctx.lineWidth = 2;
+      const bracketSize = Math.max(15, Math.min(25, faceWidth * 0.15));
+      
+      // Top-Left
+      ctx.beginPath();
+      ctx.moveTo(minX - padding + bracketSize, minY - padding);
+      ctx.lineTo(minX - padding, minY - padding);
+      ctx.lineTo(minX - padding, minY - padding + bracketSize);
+      ctx.stroke();
+
+      // Top-Right
+      ctx.beginPath();
+      ctx.moveTo(maxX + padding - bracketSize, minY - padding);
+      ctx.lineTo(maxX + padding, minY - padding);
+      ctx.lineTo(maxX + padding, minY - padding + bracketSize);
+      ctx.stroke();
+
+      // Bottom-Left
+      ctx.beginPath();
+      ctx.moveTo(minX - padding + bracketSize, maxY + padding);
+      ctx.lineTo(minX - padding, maxY + padding);
+      ctx.lineTo(minX - padding, maxY + padding - bracketSize);
+      ctx.stroke();
+
+      // Bottom-Right
+      ctx.beginPath();
+      ctx.moveTo(maxX + padding - bracketSize, maxY + padding);
+      ctx.lineTo(maxX + padding, maxY + padding);
+      ctx.lineTo(maxX + padding, maxY + padding - bracketSize);
+      ctx.stroke();
+      
+      // 2. Draw horizontal glowing Laser Scan line
       const scanProgress = (Math.sin(performance.now() * 0.002) + 1) / 2;
       const laserY = minY + (faceHeight * scanProgress);
       
