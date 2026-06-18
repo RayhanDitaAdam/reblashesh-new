@@ -152,6 +152,229 @@
             box-shadow: 0 0 10px #00ffaa;
             transition: width 0.3s ease;
         }
+
+        /* Biometric HUD Overlay */
+        #biometric-hud {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            pointer-events: none;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #biometric-hud.show {
+            opacity: 1;
+        }
+
+        .hud-status {
+            background: rgba(7, 9, 19, 0.75);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 20px;
+            padding: 8px 24px;
+            color: #00ffaa;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+            box-shadow: 0 0 15px rgba(7, 9, 19, 0.5), inset 0 0 10px rgba(0, 255, 170, 0.05);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .hud-status.warning {
+            color: #ff3b3b;
+            border-color: rgba(255, 59, 59, 0.4);
+            text-shadow: 0 0 8px rgba(255, 59, 59, 0.4);
+            box-shadow: 0 0 15px rgba(7, 9, 19, 0.5), inset 0 0 10px rgba(255, 59, 59, 0.05);
+        }
+
+        .hud-status.stable {
+            color: #00b3ff;
+            border-color: rgba(0, 179, 255, 0.4);
+            text-shadow: 0 0 8px rgba(0, 179, 255, 0.4);
+            box-shadow: 0 0 15px rgba(7, 9, 19, 0.5), inset 0 0 10px rgba(0, 179, 255, 0.05);
+        }
+
+        .hud-substatus {
+            background: rgba(7, 9, 19, 0.5);
+            padding: 4px 12px;
+            border-radius: 4px;
+            color: rgba(226, 232, 240, 0.7);
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Results Modal Overlay */
+        #results-modal {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(7, 9, 19, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #results-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: rgba(13, 17, 33, 0.95);
+            border: 2px solid #00ffaa;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.25);
+            width: 90%;
+            max-width: 440px;
+            padding: 30px;
+            box-sizing: border-box;
+            font-family: 'Orbitron', sans-serif;
+            color: #e2e8f0;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #results-modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #00ffaa;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.2);
+            padding-bottom: 12px;
+        }
+
+        .results-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        .primary-result, .quality-score {
+            flex: 1;
+            background: rgba(0, 255, 170, 0.05);
+            border: 1px solid rgba(0, 255, 170, 0.15);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .results-summary .label {
+            font-size: 9px;
+            color: rgba(226, 232, 240, 0.5);
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+
+        .results-summary .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        #res-primary {
+            color: #00ffaa;
+            text-shadow: 0 0 8px rgba(0, 255, 170, 0.3);
+        }
+
+        .shapes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .shape-bar-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .shape-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .shape-name-val {
+            color: rgba(226, 232, 240, 0.85);
+        }
+
+        .shape-pct-val {
+            font-weight: 700;
+            color: #00ffaa;
+        }
+
+        .shape-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .shape-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ffaa, #00b3ff);
+            box-shadow: 0 0 5px #00ffaa;
+            border-radius: 3px;
+            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .restart-btn {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(0, 255, 170, 0.1), rgba(0, 179, 255, 0.15));
+            border: 1px solid #00ffaa;
+            border-radius: 8px;
+            color: #00ffaa;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.1);
+        }
+
+        .restart-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 170, 0.25), rgba(0, 179, 255, 0.3));
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            text-shadow: 0 0 5px #00ffaa;
+        }
+
+        .restart-btn:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -169,8 +392,37 @@
         </div>
     </div>
 
+    <!-- 2. BIOMETRIC STATUS HUD -->
+    <div id="biometric-hud">
+        <div class="hud-status" id="hud-status">ALIGNING FACE...</div>
+        <div class="hud-substatus" id="hud-substatus">CENTER FACE IN GUIDE</div>
+    </div>
+
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
+
+    <!-- 3. RESULTS MODAL -->
+    <div id="results-modal">
+        <div class="modal-content">
+            <div class="modal-header">FACE ANALYSIS COMPLETE</div>
+            <div class="results-summary">
+                <div class="primary-result">
+                    <span class="label">PRIMARY SHAPE</span>
+                    <span class="value" id="res-primary">-</span>
+                </div>
+                <div class="quality-score">
+                    <span class="label">SCAN QUALITY</span>
+                    <span class="value" id="res-quality">0%</span>
+                </div>
+            </div>
+            
+            <div class="shapes-list" id="res-list">
+                <!-- Dynamically populated -->
+            </div>
+            
+            <button class="restart-btn" id="restart-btn">RESTART SCAN</button>
+        </div>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
 </body>
