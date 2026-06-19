@@ -89,37 +89,90 @@ async function createDetector() {
   return landmarker;
 }
 
-// Helper to draw corners of biometric guide frame
-function drawGuideFrame(x, y, width, height, color, isDashed = false) {
+// Helper to draw interactive guide frame with glowing aligned borders
+function drawInteractiveGuideBox(x, y, w, h, leftTouch, rightTouch, bottomTouch) {
   ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  if (isDashed) {
-    ctx.setLineDash([6, 6]);
-  }
   
-  const cornerLen = Math.min(25, width * 0.15);
+  // Draw top border (neutral/semi-transparent)
   ctx.beginPath();
+  ctx.strokeStyle = "rgba(226, 232, 240, 0.25)";
+  ctx.lineWidth = 2;
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + w, y);
+  ctx.stroke();
+
+  // Draw left border
+  ctx.beginPath();
+  ctx.strokeStyle = leftTouch ? "#00ffaa" : "rgba(255, 59, 59, 0.6)";
+  ctx.lineWidth = leftTouch ? 4 : 2;
+  if (leftTouch) {
+    ctx.shadowColor = "#00ffaa";
+    ctx.shadowBlur = 10;
+  }
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y + h);
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Draw right border
+  ctx.beginPath();
+  ctx.strokeStyle = rightTouch ? "#00ffaa" : "rgba(255, 59, 59, 0.6)";
+  ctx.lineWidth = rightTouch ? 4 : 2;
+  if (rightTouch) {
+    ctx.shadowColor = "#00ffaa";
+    ctx.shadowBlur = 10;
+  }
+  ctx.moveTo(x + w, y);
+  ctx.lineTo(x + w, y + h);
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Draw bottom border
+  ctx.beginPath();
+  ctx.strokeStyle = bottomTouch ? "#00ffaa" : "rgba(255, 59, 59, 0.6)";
+  ctx.lineWidth = bottomTouch ? 4 : 2;
+  if (bottomTouch) {
+    ctx.shadowColor = "#00ffaa";
+    ctx.shadowBlur = 10;
+  }
+  ctx.moveTo(x, y + h);
+  ctx.lineTo(x + w, y + h);
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Draw corners for premium HUD visual style
+  const cornerLen = 20;
+  ctx.lineWidth = 3.5;
   
+  const allTouch = leftTouch && rightTouch && bottomTouch;
+  const cornerColor = allTouch ? "#00ffaa" : "#00b3ff";
+  ctx.strokeStyle = cornerColor;
+  ctx.shadowColor = cornerColor;
+  ctx.shadowBlur = 8;
+
+  ctx.beginPath();
   // Top-Left corner
   ctx.moveTo(x + cornerLen, y);
   ctx.lineTo(x, y);
   ctx.lineTo(x, y + cornerLen);
   
   // Top-Right corner
-  ctx.moveTo(x + width - cornerLen, y);
-  ctx.lineTo(x + width, y);
-  ctx.lineTo(x + width, y + cornerLen);
+  ctx.moveTo(x + w - cornerLen, y);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y + cornerLen);
   
   // Bottom-Left corner
-  ctx.moveTo(x, y + height - cornerLen);
-  ctx.lineTo(x, y + height);
-  ctx.lineTo(x + cornerLen, y + height);
+  ctx.moveTo(x, y + h - cornerLen);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x + cornerLen, y + h);
   
   // Bottom-Right corner
-  ctx.moveTo(x + width - cornerLen, y + height);
-  ctx.lineTo(x + width, y + height);
-  ctx.lineTo(x + width, y + height - cornerLen);
+  ctx.moveTo(x + w - cornerLen, y + h);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x + w, y + h - cornerLen);
   
   ctx.stroke();
   ctx.restore();
@@ -196,6 +249,45 @@ async function main() {
   let captureBuffer = [];
   let stabilityStart = 0;
   const STABILITY_REQUIRED_MS = 600;
+
+  // Guide box dimensions
+  let boxW = 0;
+  let boxH = 0;
+  let boxX = 0;
+  let boxY = 0;
+
+  function takeSnapshot() {
+    const w = canvas.width;
+    const h = canvas.height;
+    
+    const captureCanvas = document.createElement("canvas");
+    captureCanvas.width = boxW;
+    captureCanvas.height = boxH;
+    const captureCtx = captureCanvas.getContext("2d");
+
+    // Mirror horizontally to match what the user sees
+    captureCtx.translate(boxW, 0);
+    captureCtx.scale(-1, 1);
+
+    // Map cropped coordinate back to raw unmirrored video
+    const srcX = w - boxX - boxW;
+    
+    try {
+      captureCtx.drawImage(
+        video,
+        srcX, boxY, boxW, boxH,
+        0, 0, boxW, boxH
+      );
+      
+      const dataUrl = captureCanvas.toDataURL("image/jpeg", 0.95);
+      const imgElement = document.getElementById("captured-photo");
+      if (imgElement) {
+        imgElement.src = dataUrl;
+      }
+    } catch (e) {
+      console.error("Failed to capture snapshot:", e);
+    }
+  }
 
   // Add click listener for restart button
   const restartBtn = document.getElementById('restart-btn');
@@ -377,19 +469,15 @@ async function main() {
     const w = canvas.width;
     const h = canvas.height;
 
-    // Define guide frame coordinates
-    const innerW = w * 0.42;
-    const innerH = h * 0.58;
-    const innerX = (w - innerW) / 2;
-    const innerY = (h - innerH) / 2;
+    // Define guide frame coordinates (single box in the center)
+    boxW = w * 0.38;
+    boxH = h * 0.55;
+    boxX = (w - boxW) / 2;
+    boxY = (h - boxH) / 2;
 
-    const outerW = w * 0.54;
-    const outerH = h * 0.72;
-    const outerX = (w - outerW) / 2;
-    const outerY = (h - outerH) / 2;
-
-    // Draw static guide boxes
-    drawGuideFrame(outerX, outerY, outerW, outerH, "rgba(226, 232, 240, 0.25)", true);
+    let drawLeftTouch = false;
+    let drawRightTouch = false;
+    let drawBottomTouch = false;
 
     const hudStatus = document.getElementById('hud-status');
     const hudSubstatus = document.getElementById('hud-substatus');
@@ -429,81 +517,65 @@ async function main() {
         ctx.fill();
       }
 
-      // Biometric positioning & head pose calculations
+      // Biometric positioning
       const topPt = points[10];
       const bottomPt = points[152];
       const leftPt = points[234];
       const rightPt = points[454];
 
-      const fMinX = leftPt.x * w;
-      const fMaxX = rightPt.x * w;
-      const fMinY = topPt.y * h;
-      const fMaxY = bottomPt.y * h;
+      const fMinX = Math.min(leftPt.x, rightPt.x) * w;
+      const fMaxX = Math.max(leftPt.x, rightPt.x) * w;
+      const fMinY = Math.min(topPt.y, bottomPt.y) * h;
+      const fMaxY = Math.max(topPt.y, bottomPt.y) * h; // Chin
 
       const faceCenterX = (fMinX + fMaxX) / 2;
-      const faceCenterY = (fMinY + fMaxY) / 2;
       const faceWidth = fMaxX - fMinX;
       const faceHeight = fMaxY - fMinY;
       const padding = 15;
 
-      // Position Validation
-      let posValid = true;
+      // Alignment Thresholds (5% of width/height)
+      const thresholdX = w * 0.05;
+      const thresholdY = h * 0.05;
+
+      // Checking alignment with box borders
+      const leftTouch = Math.abs(fMinX - boxX) < thresholdX;
+      const rightTouch = Math.abs(fMaxX - (boxX + boxW)) < thresholdX;
+      const bottomTouch = Math.abs(fMaxY - (boxY + boxH)) < thresholdY;
+
+      drawLeftTouch = leftTouch;
+      drawRightTouch = rightTouch;
+      drawBottomTouch = bottomTouch;
+
+      const allValid = leftTouch && rightTouch && bottomTouch;
+
+      // Position Validation & Guide HUD Feedback text
       let posFeedback = "";
       let subFeedback = "";
 
-      if (faceWidth > outerW || faceHeight > outerH || fMinX < outerX || fMaxX > (outerX + outerW) || fMinY < outerY || fMaxY > (outerY + outerH)) {
-        posValid = false;
-        posFeedback = "Move Back";
-        subFeedback = "Position face inside outer box";
-      } else if (faceWidth < innerW * 0.72) {
-        posValid = false;
+      if (faceWidth < boxW - thresholdX * 1.5) {
         posFeedback = "Move Closer";
-        subFeedback = "Align face to fit inner box";
+        subFeedback = "Align face edges to the box";
+      } else if (faceWidth > boxW + thresholdX * 1.5) {
+        posFeedback = "Move Back";
+        subFeedback = "Align face edges to the box";
+      } else if (Math.abs(faceCenterX - w / 2) > thresholdX) {
+        posFeedback = "Center Your Face";
+        subFeedback = "Move left or right to center";
+      } else if (!bottomTouch) {
+        if (fMaxY < boxY + boxH) {
+          posFeedback = "Tilt Head Down / Move Down";
+          subFeedback = "Touch chin to the bottom line";
+        } else {
+          posFeedback = "Tilt Head Up / Move Up";
+          subFeedback = "Touch chin to the bottom line";
+        }
+      } else if (!leftTouch || !rightTouch) {
+        posFeedback = "Align Sides";
+        subFeedback = "Make sure face edges touch the left & right borders";
       } else {
-        const centerXDiff = Math.abs(faceCenterX - w / 2);
-        const centerYDiff = Math.abs(faceCenterY - h / 2);
-        if (centerXDiff > w * 0.08 || centerYDiff > h * 0.08) {
-          posValid = false;
-          posFeedback = "Center Your Face";
-          subFeedback = "Align face to center of screen";
-        }
+        posFeedback = "Hold Still...";
+        subFeedback = "All points aligned!";
       }
-
-      // Head Pose Validation
-      const eyeL = points[33];
-      const eyeR = points[263];
-      const roll = Math.atan2((eyeR.y - eyeL.y) * h, (eyeR.x - eyeL.x) * w) * (180 / Math.PI);
-      const rollValid = Math.abs(roll) < 5;
-
-      const leftCheekDist = Math.abs(points[1].x - points[234].x);
-      const rightCheekDist = Math.abs(points[454].x - points[1].x);
-      const yawRatio = leftCheekDist / (leftCheekDist + rightCheekDist);
-      const yawValid = yawRatio >= 0.40 && yawRatio <= 0.60;
-
-      const foreheadNoseDist = Math.abs(points[10].y - points[1].y);
-      const noseChinDist = Math.abs(points[152].y - points[1].y);
-      const pitchRatio = foreheadNoseDist / (foreheadNoseDist + noseChinDist);
-      const pitchValid = pitchRatio >= 0.35 && pitchRatio <= 0.55;
-
-      let poseFeedback = "";
-      if (posValid) {
-        if (!rollValid) {
-          poseFeedback = "Level Your Head";
-          subFeedback = "Avoid tilting head left or right";
-        } else if (!yawValid) {
-          poseFeedback = "Look Straight";
-          subFeedback = "Keep head centered, look at camera";
-        } else if (!pitchValid) {
-          poseFeedback = "Look Straight";
-          subFeedback = "Look directly at the camera";
-        }
-      }
-
-      const allValid = posValid && rollValid && yawValid && pitchValid;
-
-      // Draw Inner Frame (Color based on validity)
-      const innerFrameColor = allValid ? "#00ffaa" : "rgba(255, 59, 59, 0.8)";
-      drawGuideFrame(innerX, innerY, innerW, innerH, innerFrameColor, false);
 
       // State Machine
       if (scanState === 'ALIGNING') {
@@ -512,11 +584,8 @@ async function main() {
           hudStatus.classList.add('warning');
         }
 
-        if (!posValid) {
+        if (!allValid) {
           if (hudStatus) hudStatus.textContent = posFeedback;
-          if (hudSubstatus) hudSubstatus.textContent = subFeedback;
-        } else if (!allValid) {
-          if (hudStatus) hudStatus.textContent = poseFeedback;
           if (hudSubstatus) hudSubstatus.textContent = subFeedback;
         } else {
           // Valid! Start stability timer
@@ -606,6 +675,7 @@ async function main() {
           if (captureBuffer.length >= 30) {
             scanState = 'RESULT';
             if (biometricHud) biometricHud.classList.remove('show');
+            takeSnapshot();
             analyzeFaceShape();
           }
         }
@@ -616,7 +686,6 @@ async function main() {
         // Reset to aligning if face is lost
         scanState = 'ALIGNING';
         stabilityStart = 0;
-        drawGuideFrame(innerX, innerY, innerW, innerH, "rgba(255, 59, 59, 0.4)", false);
         if (hudStatus) {
           hudStatus.classList.remove('stable');
           hudStatus.classList.add('warning');
@@ -624,6 +693,11 @@ async function main() {
         }
         if (hudSubstatus) hudSubstatus.textContent = "Please look at the camera";
       }
+    }
+
+    // Draw the single interactive guide box if not in result screen
+    if (scanState !== 'RESULT') {
+      drawInteractiveGuideBox(boxX, boxY, boxW, boxH, drawLeftTouch, drawRightTouch, drawBottomTouch);
     }
 
     requestAnimationFrame(render);
