@@ -620,6 +620,28 @@
             box-shadow: 0 0 10px rgba(255, 59, 59, 0.2);
         }
 
+        .hud-btn {
+            width: 100%;
+            background: rgba(0, 255, 170, 0.05);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 6px;
+            color: #00ffaa;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .hud-btn:hover {
+            background: rgba(0, 255, 170, 0.2);
+            border-color: #00ffaa;
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+        }
+
         /* Hide scrollbar for Webkit browsers */
         #control-panel::-webkit-scrollbar {
             width: 4px;
@@ -737,6 +759,10 @@
                 <span class="slider-val" id="duration-val">1.5s</span>
             </div>
             <input type="range" id="sweep-duration" min="5" max="40" step="1" value="15">
+        </div>
+
+        <div class="control-row" style="margin-top: 15px;">
+            <button class="hud-btn" id="play-pause-btn">PAUSE SCAN</button>
         </div>
 
         <button class="reset-btn" id="reset-controls-btn">RESET DEFAULTS</button>

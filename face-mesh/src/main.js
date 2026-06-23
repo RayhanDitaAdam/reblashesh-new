@@ -260,6 +260,7 @@ async function main() {
   let sweepPosition = 0.0;
   let lastFrameTime = performance.now();
   let activeAxis = 'x'; // 'x' or 'y'
+  let sweepPaused = false;
 
   // Bind controls UI
   const sweepToggle = document.getElementById("sweep-toggle");
@@ -267,6 +268,7 @@ async function main() {
   const sweepWidthSlider = document.getElementById("sweep-width");
   const meshOpacitySlider = document.getElementById("mesh-opacity");
   const sweepDurationSlider = document.getElementById("sweep-duration");
+  const playPauseBtn = document.getElementById("play-pause-btn");
   
   const widthValLabel = document.getElementById("width-val");
   const opacityValLabel = document.getElementById("opacity-val");
@@ -289,6 +291,12 @@ async function main() {
     if (durationValLabel) durationValLabel.textContent = `${sweepDuration.toFixed(1)}s`;
     
     if (activeAxisValLabel) activeAxisValLabel.textContent = `${activeAxis.toUpperCase()}-AXIS`;
+
+    if (playPauseBtn) {
+      playPauseBtn.textContent = sweepPaused ? "RESUME SCAN" : "PAUSE SCAN";
+      playPauseBtn.style.color = sweepPaused ? "#ff3b3b" : "#00ffaa";
+      playPauseBtn.style.borderColor = sweepPaused ? "rgba(255, 59, 59, 0.3)" : "rgba(0, 255, 170, 0.3)";
+    }
   }
 
   if (sweepToggle) {
@@ -320,6 +328,12 @@ async function main() {
       if (durationValLabel) durationValLabel.textContent = `${sweepDuration.toFixed(1)}s`;
     });
   }
+  if (playPauseBtn) {
+    playPauseBtn.addEventListener("click", () => {
+      sweepPaused = !sweepPaused;
+      updateControlUI();
+    });
+  }
   if (resetControlsBtn) {
     resetControlsBtn.addEventListener("click", () => {
       sweepEnabled = true;
@@ -329,6 +343,7 @@ async function main() {
       sweepDuration = 1.5;
       sweepPosition = 0.0;
       activeAxis = 'x';
+      sweepPaused = false;
       updateControlUI();
     });
   }
@@ -589,7 +604,7 @@ async function main() {
       const spanY = (maxY - minY) || 0.001;
 
       // Animate sweep
-      if (sweepEnabled) {
+      if (sweepEnabled && !sweepPaused) {
         const speed = 1.0 / sweepDuration;
         sweepPosition += delta * speed;
         
@@ -634,12 +649,23 @@ async function main() {
         }
       }
 
+      // Eye landmark indices mapping
+      const EYE_LANDMARKS = new Set([
+        // Right eye
+        33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246,
+        // Left eye
+        362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398
+      ]);
+
       // Draw mesh wireframe
       if (sweepEnabled) {
         // Setup 5 opacity buckets for line connections to optimize render performance
         const buckets = [[], [], [], [], []];
         
         FaceLandmarker.FACE_LANDMARKS_TESSELATION.forEach(connection => {
+          // Exclude connections related to eye landmarks
+          if (EYE_LANDMARKS.has(connection.start) || EYE_LANDMARKS.has(connection.end)) return;
+
           const ptA = points[connection.start];
           const ptB = points[connection.end];
           
@@ -672,21 +698,29 @@ async function main() {
           ctx.stroke();
         });
       } else {
-        drawingUtils.drawConnectors(
-          points,
-          FaceLandmarker.FACE_LANDMARKS_TESSELATION,
-          {
-            color: "rgba(0, 255, 170, 0.35)",
-            lineWidth: 0.1,
-          }
-        );
+        // Draw standard full wireframe except eye region
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(0, 255, 170, 0.35)";
+        ctx.lineWidth = 0.1;
+        FaceLandmarker.FACE_LANDMARKS_TESSELATION.forEach(connection => {
+          if (EYE_LANDMARKS.has(connection.start) || EYE_LANDMARKS.has(connection.end)) return;
+          const ptA = points[connection.start];
+          const ptB = points[connection.end];
+          ctx.moveTo(ptA.x * w, ptA.y * h);
+          ctx.lineTo(ptB.x * w, ptB.y * h);
+        });
+        ctx.stroke();
       }
 
-      // Blacklist nose index dots
+      // Blacklist nose index dots and eye landmarks
       const NOSE_BLACKLIST = new Set([
         48, 49, 102, 115, 278, 279, 331, 344,
         129, 198, 217, 209, 131, 358, 429, 437, 420, 360,
-        2, 97, 326, 98, 327, 218, 219, 220, 235, 236, 363, 456
+        2, 97, 326, 98, 327, 218, 219, 220, 235, 236, 363, 456,
+        // Right eye
+        33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246,
+        // Left eye
+        362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398
       ]);
 
       // Draw dots
@@ -722,6 +756,85 @@ async function main() {
           ctx.fill();
         }
       }
+
+      // Draw eye contour paths as thin white lines
+      const rightEyeIndices = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
+      const leftEyeIndices = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
+
+      function drawEyeContour(indices) {
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+        ctx.lineWidth = 0.55;
+        indices.forEach((idx, i) => {
+          const pt = points[idx];
+          if (i === 0) {
+            ctx.moveTo(pt.x * w, pt.y * h);
+          } else {
+            ctx.lineTo(pt.x * w, pt.y * h);
+          }
+        });
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      drawEyeContour(rightEyeIndices);
+      drawEyeContour(leftEyeIndices);
+
+      // Calculate centers of the eyes
+      let sumRx = 0, sumRy = 0;
+      rightEyeIndices.forEach(idx => {
+        sumRx += points[idx].x;
+        sumRy += points[idx].y;
+      });
+      const rightEyeCenter = {
+        x: (sumRx / rightEyeIndices.length) * w,
+        y: (sumRy / rightEyeIndices.length) * h
+      };
+
+      let sumLx = 0, sumLy = 0;
+      leftEyeIndices.forEach(idx => {
+        sumLx += points[idx].x;
+        sumLy += points[idx].y;
+      });
+      const leftEyeCenter = {
+        x: (sumLx / leftEyeIndices.length) * w,
+        y: (sumLy / leftEyeIndices.length) * h
+      };
+
+      // Draw curved line connecting eye outlines (arcing upwards over the nose bridge)
+      // Index 133 is the inner corner of the right eye, 362 is the inner corner of the left eye
+      const rightEyeConnect = {
+        x: points[133].x * w,
+        y: points[133].y * h
+      };
+      const leftEyeConnect = {
+        x: points[362].x * w,
+        y: points[362].y * h
+      };
+
+      const midX = (rightEyeConnect.x + leftEyeConnect.x) / 2;
+      const distEyes = Math.sqrt(
+        Math.pow(leftEyeConnect.x - rightEyeConnect.x, 2) + 
+        Math.pow(leftEyeConnect.y - rightEyeConnect.y, 2)
+      );
+      // Curve control point Y goes upwards (Y is subtracted in canvas)
+      const cpY = ((rightEyeConnect.y + leftEyeConnect.y) / 2) - (distEyes * 0.22);
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+      ctx.lineWidth = 0.55;
+      ctx.moveTo(rightEyeConnect.x, rightEyeConnect.y);
+      ctx.quadraticCurveTo(midX, cpY, leftEyeConnect.x, leftEyeConnect.y);
+      ctx.stroke();
+
+      // Draw tiny central tracking points inside eye centers
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+      ctx.beginPath();
+      ctx.arc(rightEyeCenter.x, rightEyeCenter.y, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(leftEyeCenter.x, leftEyeCenter.y, 1.2, 0, Math.PI * 2);
+      ctx.fill();
 
       // Biometric positioning
       const topPt = points[10];
