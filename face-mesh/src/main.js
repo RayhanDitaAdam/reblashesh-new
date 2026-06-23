@@ -21,11 +21,11 @@ function updateProgress(targetPercentage) {
   function animate(time) {
     const elapsed = time - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    
+
     // Cubic ease out
     const easeProgress = 1 - Math.pow(1 - progress, 3);
     const nowWidth = currentWidth + (targetPercentage - currentWidth) * easeProgress;
-    
+
     if (progressBar) progressBar.style.width = `${nowWidth}%`;
     if (loadPercent) loadPercent.textContent = `${Math.round(nowWidth)}%`;
 
@@ -92,7 +92,7 @@ async function createDetector() {
 // Helper to draw interactive guide frame with glowing aligned borders
 function drawInteractiveGuideBox(x, y, w, h, leftTouch, rightTouch, bottomTouch) {
   ctx.save();
-  
+
   // Draw top border (neutral/semi-transparent)
   ctx.beginPath();
   ctx.strokeStyle = "rgba(226, 232, 240, 0.25)";
@@ -146,7 +146,7 @@ function drawInteractiveGuideBox(x, y, w, h, leftTouch, rightTouch, bottomTouch)
   // Draw corners for premium HUD visual style
   const cornerLen = 20;
   ctx.lineWidth = 3.5;
-  
+
   const allTouch = leftTouch && rightTouch && bottomTouch;
   const cornerColor = allTouch ? "#00ffaa" : "#00b3ff";
   ctx.strokeStyle = cornerColor;
@@ -158,22 +158,22 @@ function drawInteractiveGuideBox(x, y, w, h, leftTouch, rightTouch, bottomTouch)
   ctx.moveTo(x + cornerLen, y);
   ctx.lineTo(x, y);
   ctx.lineTo(x, y + cornerLen);
-  
+
   // Top-Right corner
   ctx.moveTo(x + w - cornerLen, y);
   ctx.lineTo(x + w, y);
   ctx.lineTo(x + w, y + cornerLen);
-  
+
   // Bottom-Left corner
   ctx.moveTo(x, y + h - cornerLen);
   ctx.lineTo(x, y + h);
   ctx.lineTo(x + cornerLen, y + h);
-  
+
   // Bottom-Right corner
   ctx.moveTo(x + w - cornerLen, y + h);
   ctx.lineTo(x + w, y + h);
   ctx.lineTo(x + w, y + h - cornerLen);
-  
+
   ctx.stroke();
   ctx.restore();
 }
@@ -183,14 +183,14 @@ function getDistance(ptA, ptB) {
   const dx = ptA.x - ptB.x;
   const dy = ptA.y - ptB.y;
   const dz = ptA.z - ptB.z;
-  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 // Angle helper
 function getAngle(vA, vB) {
-  const dot = vA.x*vB.x + vA.y*vB.y + vA.z*vB.z;
-  const magA = Math.sqrt(vA.x*vA.x + vA.y*vA.y + vA.z*vA.z);
-  const magB = Math.sqrt(vB.x*vB.x + vB.y*vB.y + vB.z*vB.z);
+  const dot = vA.x * vB.x + vA.y * vB.y + vA.z * vB.z;
+  const magA = Math.sqrt(vA.x * vA.x + vA.y * vA.y + vA.z * vA.z);
+  const magB = Math.sqrt(vB.x * vB.x + vB.y * vB.y + vB.z * vB.z);
   const cosAngle = dot / (magA * magB);
   // Prevent floating point errors
   return Math.acos(Math.max(-1, Math.min(1, cosAngle))) * (180 / Math.PI);
@@ -250,6 +250,92 @@ async function main() {
   let stabilityStart = 0;
   const STABILITY_REQUIRED_MS = 600;
 
+  // Scanner Sweep State variables
+  let sweepEnabled = true;
+  let sweepMode = 'smooth'; // 'block' or 'smooth'
+  let sweepWidth = 0.25; // 25% of face size
+  let inactiveMeshOpacity = 0.15;
+  let sweepDuration = 1.5; // seconds per sweep
+
+  let sweepPosition = 0.0;
+  let lastFrameTime = performance.now();
+  let activeAxis = 'x'; // 'x' or 'y'
+
+  // Bind controls UI
+  const sweepToggle = document.getElementById("sweep-toggle");
+  const sweepModeSelect = document.getElementById("sweep-mode");
+  const sweepWidthSlider = document.getElementById("sweep-width");
+  const meshOpacitySlider = document.getElementById("mesh-opacity");
+  const sweepDurationSlider = document.getElementById("sweep-duration");
+  
+  const widthValLabel = document.getElementById("width-val");
+  const opacityValLabel = document.getElementById("opacity-val");
+  const durationValLabel = document.getElementById("duration-val");
+  const activeAxisValLabel = document.getElementById("active-axis-val");
+
+  const resetControlsBtn = document.getElementById("reset-controls-btn");
+
+  function updateControlUI() {
+    if (sweepToggle) sweepToggle.checked = sweepEnabled;
+    if (sweepModeSelect) sweepModeSelect.value = sweepMode;
+    
+    if (sweepWidthSlider) sweepWidthSlider.value = Math.round(sweepWidth * 100);
+    if (widthValLabel) widthValLabel.textContent = `${Math.round(sweepWidth * 100)}%`;
+    
+    if (meshOpacitySlider) meshOpacitySlider.value = inactiveMeshOpacity * 100;
+    if (opacityValLabel) opacityValLabel.textContent = `${Math.round(inactiveMeshOpacity * 100)}%`;
+    
+    if (sweepDurationSlider) sweepDurationSlider.value = Math.round(sweepDuration * 10);
+    if (durationValLabel) durationValLabel.textContent = `${sweepDuration.toFixed(1)}s`;
+    
+    if (activeAxisValLabel) activeAxisValLabel.textContent = `${activeAxis.toUpperCase()}-AXIS`;
+  }
+
+  if (sweepToggle) {
+    sweepToggle.addEventListener("change", (e) => {
+      sweepEnabled = e.target.checked;
+    });
+  }
+  if (sweepModeSelect) {
+    sweepModeSelect.addEventListener("change", (e) => {
+      sweepMode = e.target.value;
+      sweepPosition = 0.0; // reset
+    });
+  }
+  if (sweepWidthSlider) {
+    sweepWidthSlider.addEventListener("input", (e) => {
+      sweepWidth = parseFloat(e.target.value) / 100;
+      if (widthValLabel) widthValLabel.textContent = `${Math.round(sweepWidth * 100)}%`;
+    });
+  }
+  if (meshOpacitySlider) {
+    meshOpacitySlider.addEventListener("input", (e) => {
+      inactiveMeshOpacity = parseFloat(e.target.value) / 100;
+      if (opacityValLabel) opacityValLabel.textContent = `${Math.round(inactiveMeshOpacity * 100)}%`;
+    });
+  }
+  if (sweepDurationSlider) {
+    sweepDurationSlider.addEventListener("input", (e) => {
+      sweepDuration = parseFloat(e.target.value) / 10;
+      if (durationValLabel) durationValLabel.textContent = `${sweepDuration.toFixed(1)}s`;
+    });
+  }
+  if (resetControlsBtn) {
+    resetControlsBtn.addEventListener("click", () => {
+      sweepEnabled = true;
+      sweepMode = 'smooth';
+      sweepWidth = 0.25;
+      inactiveMeshOpacity = 0.15;
+      sweepDuration = 1.5;
+      sweepPosition = 0.0;
+      activeAxis = 'x';
+      updateControlUI();
+    });
+  }
+
+  // Initialize controls UI values
+  updateControlUI();
+
   // Guide box dimensions
   let boxW = 0;
   let boxH = 0;
@@ -259,7 +345,7 @@ async function main() {
   function takeSnapshot() {
     const w = canvas.width;
     const h = canvas.height;
-    
+
     const captureCanvas = document.createElement("canvas");
     captureCanvas.width = boxW;
     captureCanvas.height = boxH;
@@ -271,14 +357,14 @@ async function main() {
 
     // Map cropped coordinate back to raw unmirrored video
     const srcX = w - boxX - boxW;
-    
+
     try {
       captureCtx.drawImage(
         video,
         srcX, boxY, boxW, boxH,
         0, 0, boxW, boxH
       );
-      
+
       const dataUrl = captureCanvas.toDataURL("image/jpeg", 0.95);
       const imgElement = document.getElementById("captured-photo");
       if (imgElement) {
@@ -325,7 +411,7 @@ async function main() {
     const right = avgPoints[454];
     const top = avgPoints[10];
     const bottom = avgPoints[152];
-    
+
     const faceWidthVal = right.x - left.x;
     const faceCenterXVal = (left.x + right.x) / 2;
     const faceCenterYVal = (top.y + bottom.y) / 2;
@@ -362,13 +448,13 @@ async function main() {
     const r_forehead_cheek = foreheadWidth / cheekboneWidth;
     const r_cheek_jaw = cheekboneWidth / jawWidth;
     const r_forehead_jaw = foreheadWidth / jawWidth;
-    
+
     // User features vector
     const userFeatures = [
-      r_len_width, 
-      r_forehead_cheek, 
-      r_cheek_jaw, 
-      r_forehead_jaw, 
+      r_len_width,
+      r_forehead_cheek,
+      r_cheek_jaw,
+      r_forehead_jaw,
       chinAngle / 100
     ];
 
@@ -417,7 +503,7 @@ async function main() {
     const listRes = document.getElementById('res-list');
 
     if (primaryRes) primaryRes.textContent = results[0].name.toUpperCase();
-    
+
     // Simulate high-quality biometric rating based on face mesh stability
     if (qualityRes) {
       const q = Math.floor(95 + Math.random() * 4);
@@ -459,9 +545,13 @@ async function main() {
   }
 
   function render() {
+    const now = performance.now();
+    const delta = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+
     const result = detector.detectForVideo(
       video,
-      performance.now()
+      now
     );
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -485,36 +575,152 @@ async function main() {
     if (result.faceLandmarks.length && scanState !== 'RESULT') {
       const points = result.faceLandmarks[0];
 
-      // Draw mesh wireframe
-      drawingUtils.drawConnectors(
-        points,
-        FaceLandmarker.FACE_LANDMARKS_TESSELATION,
-        {
-          color: "rgba(0, 255, 170, 0.35)",
-          lineWidth: 0.1,
+      // Find boundaries of the face for division
+      let minX = 1.0, maxX = 0.0;
+      let minY = 1.0, maxY = 0.0;
+      for (let i = 0; i < points.length; i++) {
+        const pt = points[i];
+        if (pt.x < minX) minX = pt.x;
+        if (pt.x > maxX) maxX = pt.x;
+        if (pt.y < minY) minY = pt.y;
+        if (pt.y > maxY) maxY = pt.y;
+      }
+      const spanX = (maxX - minX) || 0.001;
+      const spanY = (maxY - minY) || 0.001;
+
+      // Animate sweep
+      if (sweepEnabled) {
+        const speed = 1.0 / sweepDuration;
+        sweepPosition += delta * speed;
+        
+        if (sweepPosition >= 1.0) {
+          sweepPosition = 0.0;
+          activeAxis = (activeAxis === 'x') ? 'y' : 'x';
+          if (activeAxisValLabel) {
+            activeAxisValLabel.textContent = `${activeAxis.toUpperCase()}-AXIS`;
+          }
         }
-      );
+      }
+
+      // Helper to calculate sweep factor of a point [0.0 - 1.0]
+      function getPointSweepOpacity(pt) {
+        let val = 0;
+        if (activeAxis === 'x') {
+          val = (pt.x - minX) / spanX;
+        } else {
+          val = (pt.y - minY) / spanY;
+        }
+        val = Math.max(0, Math.min(1.0, val));
+        
+        if (sweepMode === "block") {
+          // Block sweep: snap both position and landmark coordinate to columns
+          const cols = 12; // fixed count for block step
+          const ptCol = Math.floor(val * cols);
+          const posCol = Math.floor(sweepPosition * cols);
+          
+          // Check if pt falls inside the 3-column active window (without wrap-around)
+          const windowSize = 3;
+          const isActiveBlock = (ptCol >= posCol && ptCol < posCol + windowSize);
+          return isActiveBlock ? 1.0 : 0.0;
+        } else {
+          // Smooth slide sweep with linear falloff (without wrap-around)
+          const dist = Math.abs(val - sweepPosition);
+          
+          const halfWidth = sweepWidth / 2;
+          if (dist <= halfWidth) {
+            return 1.0 - (dist / halfWidth);
+          }
+          return 0.0;
+        }
+      }
+
+      // Draw mesh wireframe
+      if (sweepEnabled) {
+        // Setup 5 opacity buckets for line connections to optimize render performance
+        const buckets = [[], [], [], [], []];
+        
+        FaceLandmarker.FACE_LANDMARKS_TESSELATION.forEach(connection => {
+          const ptA = points[connection.start];
+          const ptB = points[connection.end];
+          
+          const factorA = getPointSweepOpacity(ptA);
+          const factorB = getPointSweepOpacity(ptB);
+          const lineFactor = (factorA + factorB) / 2;
+          
+          // Map lineFactor to a bucket index [0..4]
+          const bucketIndex = Math.max(0, Math.min(4, Math.floor(lineFactor * 5)));
+          buckets[bucketIndex].push({ ptA, ptB });
+        });
+        
+        // Draw each bucket
+        buckets.forEach((lines, index) => {
+          if (lines.length === 0) return;
+          
+          const avgLineFactor = index / 4; // 0.0 to 1.0
+          const opacity = (inactiveMeshOpacity * 0.25) + (0.45 - (inactiveMeshOpacity * 0.25)) * avgLineFactor;
+          
+          if (opacity < 0.01) return; // don't draw if invisible
+          
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(0, 255, 170, ${opacity})`;
+          ctx.lineWidth = 0.1 + 0.3 * avgLineFactor;
+          
+          lines.forEach(line => {
+            ctx.moveTo(line.ptA.x * w, line.ptA.y * h);
+            ctx.lineTo(line.ptB.x * w, line.ptB.y * h);
+          });
+          ctx.stroke();
+        });
+      } else {
+        drawingUtils.drawConnectors(
+          points,
+          FaceLandmarker.FACE_LANDMARKS_TESSELATION,
+          {
+            color: "rgba(0, 255, 170, 0.35)",
+            lineWidth: 0.1,
+          }
+        );
+      }
 
       // Blacklist nose index dots
       const NOSE_BLACKLIST = new Set([
-        48, 49, 102, 115, 278, 279, 331, 344, 
+        48, 49, 102, 115, 278, 279, 331, 344,
         129, 198, 217, 209, 131, 358, 429, 437, 420, 360,
         2, 97, 326, 98, 327, 218, 219, 220, 235, 236, 363, 456
       ]);
 
       // Draw dots
-      ctx.fillStyle = "rgba(0, 255, 170, 0.65)";
-      for (let i = 0; i < points.length; i++) {
-        if (NOSE_BLACKLIST.has(i)) continue;
-        ctx.beginPath();
-        ctx.arc(
-          points[i].x * w,
-          points[i].y * h,
-          0.5,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
+      if (sweepEnabled) {
+        for (let i = 0; i < points.length; i++) {
+          if (NOSE_BLACKLIST.has(i)) continue;
+          
+          const pt = points[i];
+          const factor = getPointSweepOpacity(pt);
+          const opacity = inactiveMeshOpacity + (0.95 - inactiveMeshOpacity) * factor;
+          
+          if (opacity < 0.01) continue; // skip invisible
+          
+          const radius = 0.4 + 0.8 * factor;
+          
+          ctx.fillStyle = `rgba(0, 255, 170, ${opacity})`;
+          ctx.beginPath();
+          ctx.arc(pt.x * w, pt.y * h, radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        ctx.fillStyle = "rgba(0, 255, 170, 0.65)";
+        for (let i = 0; i < points.length; i++) {
+          if (NOSE_BLACKLIST.has(i)) continue;
+          ctx.beginPath();
+          ctx.arc(
+            points[i].x * w,
+            points[i].y * h,
+            0.5,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
       }
 
       // Biometric positioning

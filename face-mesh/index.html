@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    
+
     <style>
         body {
             margin: 0;
@@ -39,7 +40,8 @@
             position: absolute;
             width: 100vw;
             height: 100vh;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             background-color: #070913;
             z-index: 1000;
             display: flex;
@@ -104,24 +106,54 @@
         }
 
         @keyframes rotate-clockwise {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes rotate-counter-clockwise {
-            from { transform: rotate(360deg); }
-            to { transform: rotate(0deg); }
+            from {
+                transform: rotate(360deg);
+            }
+
+            to {
+                transform: rotate(0deg);
+            }
         }
 
         @keyframes pulse-core {
-            0%, 100% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 1; }
+
+            0%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
         }
 
         @keyframes scan-vertical {
-            0% { top: 10%; opacity: 0.3; }
-            50% { top: 90%; opacity: 1; }
-            100% { top: 10%; opacity: 0.3; }
+            0% {
+                top: 10%;
+                opacity: 0.3;
+            }
+
+            50% {
+                top: 90%;
+                opacity: 1;
+            }
+
+            100% {
+                top: 10%;
+                opacity: 0.3;
+            }
         }
 
         .loader-percent {
@@ -256,7 +288,8 @@
         /* Results Modal Overlay */
         #results-modal {
             position: absolute;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
             background: rgba(7, 9, 19, 0.85);
@@ -314,7 +347,8 @@
             gap: 15px;
         }
 
-        .primary-result, .quality-score {
+        .primary-result,
+        .quality-score {
             flex: 1;
             background: rgba(0, 255, 170, 0.05);
             border: 1px solid rgba(0, 255, 170, 0.15);
@@ -414,8 +448,195 @@
         .restart-btn:active {
             transform: scale(0.98);
         }
+
+        /* Futuristic Control Panel */
+        #control-panel {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 290px;
+            background: rgba(7, 9, 19, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: 'Orbitron', sans-serif;
+            color: #e2e8f0;
+            z-index: 150;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 255, 170, 0.05);
+            max-height: calc(100vh - 50px);
+            overflow-y: auto;
+            transition: opacity 0.3s ease;
+        }
+
+        .control-header {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #00ffaa;
+            text-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+            border-bottom: 1px solid rgba(0, 255, 170, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: rgba(226, 232, 240, 0.85);
+        }
+
+        .slider-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .slider-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .slider-val {
+            font-size: 11px;
+            color: #00ffaa;
+            font-weight: 700;
+            text-shadow: 0 0 5px rgba(0, 255, 170, 0.3);
+        }
+
+        /* Checkbox styling */
+        #control-panel input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 38px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(226, 232, 240, 0.2);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #control-panel input[type="checkbox"]:checked {
+            background: rgba(0, 255, 170, 0.1);
+            border-color: #00ffaa;
+            box-shadow: 0 0 8px rgba(0, 255, 170, 0.2);
+        }
+
+        #control-panel input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background: #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+
+        #control-panel input[type="checkbox"]:checked::before {
+            transform: translateX(18px);
+            background: #00ffaa;
+            box-shadow: 0 0 5px #00ffaa;
+        }
+
+        /* Select dropdown styling */
+        .hud-select {
+            background: rgba(7, 9, 19, 0.9);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 4px;
+            color: #00ffaa;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            padding: 4px 8px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .hud-select option {
+            background: #0d1121;
+            color: #e2e8f0;
+        }
+
+        /* Slider range styling */
+        #control-panel input[type="range"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            outline: none;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        #control-panel input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00ffaa;
+            cursor: pointer;
+            box-shadow: 0 0 8px #00ffaa;
+            transition: transform 0.1s ease;
+        }
+
+        #control-panel input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .reset-btn {
+            width: 100%;
+            background: rgba(255, 59, 59, 0.05);
+            border: 1px solid rgba(255, 59, 59, 0.3);
+            border-radius: 6px;
+            color: #ff3b3b;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 59, 59, 0.2);
+            border-color: #ff3b3b;
+            box-shadow: 0 0 10px rgba(255, 59, 59, 0.2);
+        }
+
+        /* Hide scrollbar for Webkit browsers */
+        #control-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        #control-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #control-panel::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 170, 0.2);
+            border-radius: 2px;
+        }
+        #control-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 170, 0.5);
+        }
     </style>
 </head>
+
 <body>
     <!-- 1. LOADING OVERLAY -->
     <div id="loader">
@@ -444,7 +665,7 @@
     <div id="results-modal">
         <div class="modal-content">
             <div class="modal-header">FACE ANALYSIS COMPLETE</div>
-            
+
             <!-- PHOTO CAPTURE FRAME -->
             <div class="photo-capture-container">
                 <div class="photo-frame">
@@ -463,15 +684,65 @@
                     <span class="value" id="res-quality">0%</span>
                 </div>
             </div>
-            
+
             <div class="shapes-list" id="res-list">
                 <!-- Dynamically populated -->
             </div>
-            
+
             <button class="restart-btn" id="restart-btn">RESTART SCAN</button>
         </div>
     </div>
 
+    <!-- 4. HOLOGRAPHIC SCAN CONTROLS -->
+    <div id="control-panel">
+        <div class="control-header">SCANNER HUD CONFIG</div>
+        
+        <div class="control-row">
+            <label class="control-label" for="sweep-toggle">ENABLE SWEEP SCAN</label>
+            <input type="checkbox" id="sweep-toggle" checked>
+        </div>
+
+        <div class="control-row">
+            <label class="control-label" for="sweep-mode">SWEEP MODE</label>
+            <select id="sweep-mode" class="hud-select">
+                <option value="block">BLOCK STEP</option>
+                <option value="smooth">SMOOTH SLIDE</option>
+            </select>
+        </div>
+
+        <div class="control-row">
+            <span class="control-label">ACTIVE AXIS</span>
+            <span class="slider-val" id="active-axis-val">X-AXIS</span>
+        </div>
+        
+        <div class="control-row slider-group">
+            <div class="slider-info">
+                <span class="control-label">SWEEP WIDTH</span>
+                <span class="slider-val" id="width-val">25%</span>
+            </div>
+            <input type="range" id="sweep-width" min="5" max="50" step="1" value="25">
+        </div>
+        
+        <div class="control-row slider-group">
+            <div class="slider-info">
+                <span class="control-label">BACKGROUND MESH OPACITY</span>
+                <span class="slider-val" id="opacity-val">15%</span>
+            </div>
+            <input type="range" id="mesh-opacity" min="0" max="40" step="5" value="15">
+        </div>
+        
+        <div class="control-row slider-group">
+            <div class="slider-info">
+                <span class="control-label">SWEEP DURATION</span>
+                <span class="slider-val" id="duration-val">1.5s</span>
+            </div>
+            <input type="range" id="sweep-duration" min="5" max="40" step="1" value="15">
+        </div>
+
+        <button class="reset-btn" id="reset-controls-btn">RESET DEFAULTS</button>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>
