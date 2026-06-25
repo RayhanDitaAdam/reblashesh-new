@@ -52,141 +52,25 @@
             color: #e2e8f0;
         }
 
-        .scanner-hud {
-            position: relative;
-            width: 140px;
-            height: 140px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .scanner-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3.5px solid rgba(0, 255, 170, 0.1);
+            border-top: 3.5px solid #00ffaa;
             border-radius: 50%;
-            border: 2px dashed #00ffaa;
-            box-shadow: 0 0 10px rgba(0, 255, 250, 0.2);
-            animation: rotate-clockwise 15s linear infinite;
-        }
-
-        .scanner-ring-inner {
-            position: absolute;
-            width: 75%;
-            height: 75%;
-            border-radius: 50%;
-            border: 1px dashed #00b3ff;
-            border-top: 2px solid #00ffaa;
-            border-bottom: 2px solid #00ffaa;
-            animation: rotate-counter-clockwise 8s linear infinite;
-        }
-
-        .scanner-core {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            background-color: #00ffaa;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #00ffaa;
-            animation: pulse-core 2s ease-in-out infinite;
-        }
-
-        .scanner-line {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00ffaa, transparent);
-            box-shadow: 0 0 15px #00ffaa;
-            animation: scan-vertical 2.5s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes rotate-clockwise {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes rotate-counter-clockwise {
-            from {
-                transform: rotate(360deg);
-            }
-
-            to {
-                transform: rotate(0deg);
-            }
-        }
-
-        @keyframes pulse-core {
-
-            0%,
-            100% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
-
-            50% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-        }
-
-        @keyframes scan-vertical {
-            0% {
-                top: 10%;
-                opacity: 0.3;
-            }
-
-            50% {
-                top: 90%;
-                opacity: 1;
-            }
-
-            100% {
-                top: 10%;
-                opacity: 0.3;
-            }
-        }
-
-        .loader-percent {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
-            font-weight: 700;
-            color: #00ffaa;
-            text-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-        }
-
-        .progress-container {
-            width: 280px;
-            height: 5px;
-            background: rgba(0, 255, 170, 0.05);
-            border: 1px solid rgba(0, 255, 170, 0.2);
-            border-radius: 3px;
-            overflow: hidden;
+            animation: spin 0.85s linear infinite;
             margin-bottom: 20px;
-            position: relative;
         }
 
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00ffaa, #00b3ff);
-            box-shadow: 0 0 10px #00ffaa;
-            transition: width 0.3s ease;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
+
 
         /* Biometric HUD Overlay */
         #biometric-hud {
+            display: none !important;
             position: absolute;
             top: 25px;
             left: 50%;
@@ -451,6 +335,7 @@
 
         /* Futuristic Control Panel */
         #control-panel {
+            display: none;
             position: absolute;
             top: 25px;
             right: 25px;
@@ -653,25 +538,115 @@
             background: rgba(0, 255, 170, 0.2);
             border-radius: 2px;
         }
-        #control-panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 255, 170, 0.5);
+
+        /* Screen HUD Responsive Overlays */
+        #hud-text-overlays {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .hud-text {
+            position: absolute;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff; /* White text */
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        #hud-top-left {
+            top: 30px;
+            left: 30px;
+        }
+
+        #hud-top-right {
+            top: 30px;
+            right: 30px;
+        }
+
+        #hud-set {
+            top: 32%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15px;
+        }
+
+        #hud-detect {
+            top: 80%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        #bg-image {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 5;
+            transition: opacity 0.8s ease;
+        }
+
+        #bg-image.pulse {
+            animation: pulse-breathing 2.0s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse-breathing {
+            0% {
+                opacity: 0.3;
+                filter: brightness(0.5) contrast(1.2);
+            }
+            100% {
+                opacity: 0.9;
+                filter: brightness(1.1) contrast(0.9);
+            }
+        }
+
+        #hud-start-prompt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            color: #00ffaa;
+            text-shadow: 0 0 10px #00ffaa, 0 0 5px #00ffaa;
+            z-index: 200;
+            pointer-events: none;
+            letter-spacing: 3px;
+            animation: pulse-glow 1.5s infinite alternate ease-in-out;
+            transition: opacity 0.5s ease;
+        }
+
+        @keyframes pulse-glow {
+            from {
+                opacity: 0.3;
+                text-shadow: 0 0 5px #00ffaa;
+            }
+            to {
+                opacity: 1;
+                text-shadow: 0 0 20px #00ffaa, 0 0 8px #00ffaa;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- 1. LOADING OVERLAY -->
     <div id="loader">
-        <div class="scanner-hud">
-            <div class="scanner-ring"></div>
-            <div class="scanner-ring-inner"></div>
-            <div class="scanner-core"></div>
-            <div class="scanner-line"></div>
-        </div>
-        <div class="loader-percent" id="load-percent">0%</div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
+        <div class="spinner"></div>
+        <div style="font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 2px; color: #00ffaa; text-transform: uppercase;">LOADING MODELS...</div>
     </div>
 
     <!-- 2. BIOMETRIC STATUS HUD -->
@@ -681,7 +656,16 @@
     </div>
 
     <video id="video" autoplay playsinline muted></video>
+    <img id="bg-image" class="pulse" src="/center_face.webp" alt="Face Template" />
     <canvas id="canvas"></canvas>
+
+    <!-- 5. SCREEN HUD RESPONSIVE TEXT OVERLAYS -->
+    <div id="hud-text-overlays">
+        <div id="hud-top-left" class="hud-text">EYE : EYE</div>
+        <div id="hud-top-right" class="hud-text">SHAPE : DIAMOND</div>
+        <div id="hud-set" class="hud-text">SET : DEFAULT</div>
+        <div id="hud-detect" class="hud-text">DETECT : EYE, DIAMOND, DEFAULT</div>
+    </div>
 
     <!-- 3. RESULTS MODAL -->
     <div id="results-modal">
@@ -717,11 +701,21 @@
 
     <!-- 4. HOLOGRAPHIC SCAN CONTROLS -->
     <div id="control-panel">
-        <div class="control-header">SCANNER HUD CONFIG</div>
         
         <div class="control-row">
             <label class="control-label" for="sweep-toggle">ENABLE SWEEP SCAN</label>
             <input type="checkbox" id="sweep-toggle" checked>
+        </div>
+
+        <div class="control-row">
+            <label class="control-label" for="outline-shape">OUTLINE GEOMETRY</label>
+            <select id="outline-shape" class="hud-select">
+                <option value="oval">ORGANIC OVAL</option>
+                <option value="diamond" selected>CYBER DIAMOND</option>
+                <option value="square">TECH SQUARE</option>
+                <option value="round">BIO ROUND</option>
+                <option value="heart">NEO HEART</option>
+            </select>
         </div>
 
         <div class="control-row">
@@ -751,6 +745,30 @@
                 <span class="slider-val" id="opacity-val">15%</span>
             </div>
             <input type="range" id="mesh-opacity" min="0" max="40" step="5" value="15">
+        </div>
+        
+        <div class="control-row slider-group">
+            <div class="slider-info">
+                <span class="control-label">SKULL TOP EXTENSION</span>
+                <span class="slider-val" id="extension-val">45%</span>
+            </div>
+            <input type="range" id="skull-extension" min="0" max="80" step="5" value="45">
+        </div>
+        
+        <div class="control-row slider-group">
+            <div class="slider-info">
+                <span class="control-label">DIAMOND WIDTH</span>
+                <span class="slider-val" id="diamond-width-val">20%</span>
+            </div>
+            <input type="range" id="diamond-width" min="0" max="50" step="5" value="20">
+        </div>
+        
+        <div class="control-row slider-group">
+            <div class="slider-info">
+                <span class="control-label">DIAMOND HEIGHT</span>
+                <span class="slider-val" id="diamond-height-val">20%</span>
+            </div>
+            <input type="range" id="diamond-height" min="0" max="50" step="5" value="20">
         </div>
         
         <div class="control-row slider-group">
