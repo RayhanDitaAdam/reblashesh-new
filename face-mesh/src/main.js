@@ -22,6 +22,7 @@ async function main() {
   let trackingStartTime = 0;
   let isReadyToStart = false;
   let clickTriggered = false;
+  let faceFirstDetected = false;
 
   function startScanner() {
     if (trackingInitialized) return;
@@ -33,6 +34,14 @@ async function main() {
     const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
     setState({ outlineShape: randomShape });
 
+    // Fade out and remove the startup prompt container
+    const prompt = document.getElementById("startup-prompt-container");
+    if (prompt) {
+      prompt.style.opacity = "0";
+      setTimeout(() => prompt.remove(), 500);
+    }
+
+    // Permanently remove the background template image on scan launch
     const bgImg = document.getElementById("bg-image");
     if (bgImg) {
       bgImg.style.display = "none";
@@ -42,6 +51,7 @@ async function main() {
 
   // Register click handler synchronously at the very beginning of main()
   document.body.addEventListener("click", () => {
+    if (!faceFirstDetected) return; // Cannot click until face is detected and image is gone
     clickTriggered = true;
     if (isReadyToStart) {
       startScanner();
@@ -164,6 +174,29 @@ async function main() {
 
     const state = getState();
     const result = detector.detectForVideo(video, now);
+
+    // Automatically toggle background image based on face presence before the scan has started
+    const faceDetected = result.faceLandmarks.length > 0;
+    if (!trackingInitialized) {
+      const bgImg = document.getElementById("bg-image");
+      if (bgImg) {
+        if (faceDetected) {
+          if (!faceFirstDetected) {
+            faceFirstDetected = true;
+            bgImg.classList.remove("pulse");
+            bgImg.style.opacity = "0";
+            bgImg.style.pointerEvents = "none";
+          }
+        } else {
+          if (faceFirstDetected) {
+            faceFirstDetected = false;
+            bgImg.classList.add("pulse");
+            bgImg.style.opacity = "1";
+            bgImg.style.pointerEvents = "auto";
+          }
+        }
+      }
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
